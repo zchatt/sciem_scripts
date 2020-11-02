@@ -61,14 +61,14 @@ In addition to trimming the adaper sequences, this will trim low quality bases (
   $demultiplex_hd_pass_trimmed -> here, demultiplexed_hd_pass_trimmed is the file obtained after trimming $demultiplex_hd_pass file. 
 
 
-## 7a. Hybrid genome; The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
+## 7a. Hybrid genome
+The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
 	
 	cat /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/hg38/hg38.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/GRCm39/GCF_000001635.27_GRCm39_genomic.fna /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/pUC19/pUC19_addgene.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/lambda/lambda.fa > hg38_GRCm39_pUC19_Lambda.fa
 
 	picard NormalizeFasta I=hg38_GRCm39_pUC19_Lambda.fa O=normalized_hg38_GRCm39_pUC19_Lambda.fa
 
 	samtools faidx normalized_hg38_GRCm39_pUC19_Lambda.fa
-
 
 ## In Development - Additional steps to add into pip
 ## bbmap (installed on Artemis) - why???
