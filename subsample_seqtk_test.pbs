@@ -1,0 +1,28 @@
+#!/bin/bash
+#PBS -P DementiaCFDNA
+#PBS -N subsample_random
+#PBS -l select=1:ncpus=24:mem=32GB
+#PBS -l walltime=05:00:00
+
+## module to load
+module load seqtk
+
+## subsetting seed - need to change to get other reads such as in replicates
+rep_seed=100
+reads=100000
+
+# set working directory
+io=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
+cd ${io}
+
+# select files
+r1=${io}/Undetermined.merged.R1.fq.gz
+r2=${io}/Undetermined.merged.R2.fq.gz
+i1=${io}/Undetermined.merged.I1.fq.gz
+i2_i3=${io}/Undetermined.merged.I2_I3.fq.gz
+
+## run script
+seqtk sample -s $rep_seed ${r1} $reads | gzip > ${reads}_random_r1.fq.gz
+seqtk sample -s $rep_seed ${r2} $reads | gzip > ${reads}_random_r2.fq.gz
+seqtk sample -s $rep_seed ${i1} $reads | gzip > ${reads}_random_i1.fq.gz
+seqtk sample -s $rep_seed ${i2_i3} $reads | gzip > ${reads}_random_i2_i3.fq.gz

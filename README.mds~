@@ -1,0 +1,37 @@
+## Single-cell combinatorial indexing WGBS bioinformatics pipeline
+
+## inputs
+code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/code/scimet_scripts
+
+## pipeline
+1. convert bcl to fastq files using bcl2fastq2 software (installed on Artemis); 
+${code_location}/bcl2fastq_scimet.sub
+
+2. combine all lanes of run, rename and split I2 to I2 & I3
+${code_location}/merge_fq.sh 
+
+3. Demultiplexing R1, then demultiplex R2 by rename
+${code_location}/CPT_HiSeq_fq_to_methCPT_split_hamming_PerLane_SE.pl
+
+4. FastQC pre-trim
+
+
+5. Trimming
+
+
+6. FastQC post-trim
+
+
+7. Alignment to human-mouse-pUC19-Lambda hybrid genome using scBS-MAP
+
+
+8. Split alignment to single-cells
+
+
+# Notes
+• bbmap (installed on Artemis)
+• scBS-MAP (Dependencies: SAMtools, bowtie2, BS-Seeker2 (This requires bowtie2, python2.6 or higher, pysam)). From this, install BS-Seeker and pysam.
+• bamtools (installed on Artemis)
+• CGmap tools (not installed on Artemis)
+• Clustering (Can be done using SciKit-learn - not installed on Artemis)
+
