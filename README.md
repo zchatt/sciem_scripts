@@ -29,15 +29,18 @@ files using bcl2fastq2 software (installed on Artemis). This generates .fastq fi
 	${code_location}/bcl2fastq_scimet.sub
 
 
-## 2a. Combine all lanes of run, rename and split I2 to I2 & I3. This script merges R1, R2, I1, and I2 (which contains I2 and I3) from 4 lanes of fastq files.
+## 2a. Combine all lanes of run, rename and split I2 to I2 & I3. 
+This script merges R1, R2, I1, and I2 (which contains I2 and I3) from 4 lanes of fastq files.
 	
 	${code_location}/merge_fq_scimet.sh 
 
-## 2b. Index_2 (I2) contains 2 barcode sequences concataneted together into a single file. Therefore, I2 was split into I2 and I3.
+## 2b. Index_2 (I2) 
+contains 2 barcode sequences concataneted together into a single file. Therefore, I2 was split into I2 and I3.
 
 	${code_location}/split_i2.pbs
 
-## 3. Demultiplexing R1, then demultiplex R2 by rename.To assign individual reads to a particular barcode, reads must be first assessed based on the index sequences corresponding to those specific reads. This is accomplished in a process called demultiplexing. Here, all the index sequences (I1, I2, I3) are used to assign a particular read to a prticular cell type. For this, Hamming Distance algorithm is used to account for sequencing errors. This code needs barcode file with i5 index 1 base short i.e 9 bases. Also, i7 tags from only i7_1 - i7_9 were used. So, only those tags put on the barcode file. This was generated with the script "barcodes_scimet_from_csv.py".After Read_1 is demultiplexed, the reads that pass/fail are separated into two files i.e. pass and fail. The names for both the files are changed to temp_{previous_name}. Then, Read_2 is demultiplexed following the same steps. Then, the reads that passed from both R1 and R2 are concatenated into a single R1_R2 file (similar for the failed reads). This R1_R2 file is then passed to fastqc.  The following is modified from modified from CPT_HiSeq_fq_to_methCPT_split_hamming_PerLane_SE.pl as supplied by Andrew Adey.
+## 3. Demultiplexing R1, then demultiplex R2 by rename.
+To assign individual reads to a particular barcode, reads must be first assessed based on the index sequences corresponding to those specific reads. This is accomplished in a process called demultiplexing. Here, all the index sequences (I1, I2, I3) are used to assign a particular read to a prticular cell type. For this, Hamming Distance algorithm is used to account for sequencing errors. This code needs barcode file with i5 index 1 base short i.e 9 bases. Also, i7 tags from only i7_1 - i7_9 were used. So, only those tags put on the barcode file. This was generated with the script "barcodes_scimet_from_csv.py".After Read_1 is demultiplexed, the reads that pass/fail are separated into two files i.e. pass and fail. The names for both the files are changed to temp_{previous_name}. Then, Read_2 is demultiplexed following the same steps. Then, the reads that passed from both R1 and R2 are concatenated into a single R1_R2 file (similar for the failed reads). This R1_R2 file is then passed to fastqc.  The following is modified from modified from CPT_HiSeq_fq_to_methCPT_split_hamming_PerLane_SE.pl as supplied by Andrew Adey.
 
 	${code_location}/demultiplex_scimet_prav_modified.pl (modified from CPT_HiSeq_fq_to_methCPT_split_hamming_PerLane_SE.pl)
 
@@ -46,7 +49,8 @@ files using bcl2fastq2 software (installed on Artemis). This generates .fastq fi
 	fastqc --outdir=$fastQCDir
   	$demultiplex_hd_pass -> here, demultiplex_hd_pass is the concatenated file containing R1 and R2 that passed with HD 2.  
 
-## 5. Trimming; In addition to trimming the adaper sequences, this will trim low quality bases (denoted by the phred score of 30). Also, any read sequences resulting in a length of 20 bp or lower will not be included in the output file.  
+## 5. Trimming
+In addition to trimming the adaper sequences, this will trim low quality bases (denoted by the phred score of 30). Also, any read sequences resulting in a length of 20 bp or lower will not be included in the output file.  
 	
 	trim_galore --quality 30 --phred33 -a AGATCGGAAGAGC --stringency 1 -e 0.1 \
   --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass
