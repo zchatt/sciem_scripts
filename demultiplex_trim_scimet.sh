@@ -114,11 +114,11 @@ then
 
   echo "perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
   $READ_1:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${code_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R1"
+  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R1"
   echo "[TIME: demultiplex_R1]"
   time perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
   $READ_1:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${code_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R1
+  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R1
 else
   echo "Found" ${outDir}"/demultplex_R1.L00.1.fq.gz"
 fi
@@ -139,11 +139,11 @@ then
 
   echo "perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
   $READ_2:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${code_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R2"
+  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R2"
   echo "[TIME: demultiplex_R1]"
   time perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
   $READ_2:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${code_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R2
+  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R2
 else
   echo "Found" ${outDir}"/demultplex_R2.L00.1.fq.gz"
 fi
@@ -187,10 +187,10 @@ if [ ! -f $trim_Dir/$(basename $demultiplex_hd_pass .fq.gz)_trimmed.fq.gz ];
 then
   echo "Running trim galore"
 
-  echo " trim_galore --quality 30 --phred33 -a AGATCGGAAGAGC --stringency 1 -e 0.1 \
+  echo " trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
   --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass"
   echo "[TIME: trim galore]"
-  time trim_galore --quality 30 --phred33 -a AGATCGGAAGAGC --stringency 1 -e 0.1 \
+  time trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
   --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass
 else
   echo "Found" $trim_Dir/$(basename $demultiplex_hd_pass .fq.gz)_trimmed.fq.gz
