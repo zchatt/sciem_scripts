@@ -9,7 +9,7 @@ _scimet_scripts_ is s collection of scripts used for the analysis of single-cell
 [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) (2.2.5),
 [parallel](https://www.gnu.org/software/parallel/) (20160222),
 [picard](https://broadinstitute.github.io/picard/) (2.7.1),
-[](http://pellegrini-legacy.mcdb.ucla.edu/bs_seeker2/)
+[bs_seeker2](http://pellegrini-legacy.mcdb.ucla.edu/bs_seeker2/)
 [python](https://www.python.org/) (2.7.9),
 [R](https://www.r-project.org/) (3.6.3),
 [samtools](http://www.htslib.org/) (1.9),
@@ -55,11 +55,11 @@ In addition to trimming the adaper sequences, this will trim low quality bases (
 	trim_galore --quality 30 --phred33 -a AGATCGGAAGAGC --stringency 1 -e 0.1 \
   --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass
 
-
 ## 6. FastQC post-trim
-	fastqc --outdir=$fastQC_trim_Dir \
-  $demultiplex_hd_pass_trimmed -> here, demultiplexed_hd_pass_trimmed is the file obtained after trimming $demultiplex_hd_pass file. 
 
+	fastqc --outdir=$fastQC_trim_Dir \
+
+	$demultiplex_hd_pass_trimmed -> here, demultiplexed_hd_pass_trimmed is the file obtained after trimming $demultiplex_hd_pass file. 
 
 ## 7a. Hybrid genome
 The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
@@ -70,18 +70,38 @@ The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA
 
 	samtools faidx normalized_hg38_GRCm39_pUC19_Lambda.fa
 
-## In Development - Additional steps to add into pip
-## bbmap (installed on Artemis) - why???
-## scBS-MAP (Dependencies: SAMtools, bowtie2, BS-Seeker2 (This requires bowtie2, python2.6 or higher, pysam)). From this, install BS-Seeker and pysam. Needed fro alignment
-## bamtools (installed on Artemis)  - handling bam files post alignment
-## CGmap tools (not installed on Artemis) - post alignment bisulfite seq handling
-## Clustering (Can be done using SciKit-learn - not installed on Artemis)
-
 ## 7b. Alignment to human-mouse-pUC19-Lambda hybrid genome using scBS-MAP. 
 	
-	export PATH=//project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/:$PATH
+	${code_location}/scbsmap.pbs
 
-## 8. Split alignment to single-cells
+## 8. Split aligned .bam file to single-cells and/ or experiments
+a) Select unique reads and create cell-barcode col "CB" 
+
+	bam_in=demultiplex_R1_R2.L00.1_trimmed.bam
+
+	samtools view -h $bam_in | awk '{$5 != 0; print $0}' | awk 'BEGIN{OFS="\t"}{split($1, a, ":"); print $0,"CB:Z:"a[1]}' | samtools view -bS > tmp.bam
+
+b) Split .bam file based on "Cluster". The "Cluster" can be set to per-cell, per-experiment or any other grouping.
+	
+	cluster_file=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/clusters.csv
+
+	module load python
+	${code_location}/split_bam.py $cluster_file tmp.bam
+
+
+## In Development - Additional steps to add into pip
+bbmap (installed on Artemis) - why???
+bamtools (installed on Artemis)  - handling bam files post alignment
+CGmap tools (not installed on Artemis) - post alignment bisulfite seq handling
+Clustering (Can be done using SciKit-learn - not installed on Artemis)
+
+## 9. Collect bam stats
+
+
+## 10. Bam to CGmap mbin - calculated the average methylation levels in equal-length bins, across genome
+
+
+## 1. CGmap coverage cgmaptools oac
 
 
 ## QuickRun - A single bash script was written to combine all the steps (1-Nth) above to this point. 
