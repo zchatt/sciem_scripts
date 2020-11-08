@@ -123,10 +123,6 @@ else
   echo "Found" ${outDir}"/demultplex_R1.L00.1.fq.gz"
 fi
 
-## change file name of demultiplexed R1
-mv ${outDir}"/demultiplex_R1.L00.1.fq.gz" ${outDir}"/temp_demultiplex_R1.L00.1.fq.gz"
-mv ${outDir}"/demultiplex_R1.L00.fail.1.fq.gz" ${outDir}"/temp_demultiplex_R1.L00.fail.1.fq.gz"
-
 ##########################################################################################################################
 ##########################################################################################################################
 ### demultiplex read_2 with hamming distance 2
@@ -148,13 +144,12 @@ else
   echo "Found" ${outDir}"/demultplex_R2.L00.1.fq.gz"
 fi
 
-## merge passed R1 & R2 and failed R1 and R2
-cat ${outDir}"/temp_demultiplex_R1.L00.1.fq.gz" ${outDir}"/demultiplex_R2.L00.1.fq.gz" > ${outDir}"/demultiplex_R1_R2.L00.1.fq.gz"
-cat ${outDir}"/temp_demultiplex_R1.L00.fail.1.fq.gz" ${outDir}"/demultiplex_R2.L00.fail.1.fq.gz" > ${outDir}"/demultiplex_R1_R2.L00.fail.1.fq.gz"
-
 ## change file name variables
-demultiplex_hd_pass=${outDir}/demultiplex_R1_R2.L00.1.fq.gz
-demultiplex_hd_fail=${outDir}/demultiplex_R1_R2.L00.fail.1.fq.gz
+demultiplex_hd_pass_r1=${outDir}/demultiplex_R1.L00.1.fq.gz
+demultiplex_hd_pass_r2=${outDir}/demultiplex_R2.L00.1.fq.gz
+
+demultiplex_hd_fail_r1=${outDir}/demultiplex_R1.L00.fail.1.fq.gz
+demultiplex_hd_fail_r2=${outDir}/demultiplex_R2.L00.fail.1.fq.gz
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -162,19 +157,36 @@ demultiplex_hd_fail=${outDir}/demultiplex_R1_R2.L00.fail.1.fq.gz
 ##########################################################################################################################
 ##########################################################################################################################
 
-if [ ! -f $fastQCDir/$(basename $demultiplex_hd_pass .fq.gz)_fastqc.zip ];
+## Read 1
+if [ ! -f $fastQCDir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_fastqc.zip ];
 then
   echo "Running fastQC preTrim"
 
   echo "fastqc \
   --outdir=$fastQCDir \
-  $demultiplex_hd_pass"
+  $demultiplex_hd_pass_r1"
   echo "[TIME: fastqc postTrim]"
   time fastqc \
   --outdir=$fastQCDir \
-  $demultiplex_hd_pass
+  $demultiplex_hd_pass_r1
 else
-  echo "Found" $fastQCDir/$(basename $demultiplex_hd_pass .fq.gz)_fastqc.zip
+  echo "Found" $fastQCDir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_fastqc.zip
+fi
+
+## Read 2
+if [ ! -f $fastQCDir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_fastqc.zip ];
+then
+  echo "Running fastQC preTrim"
+
+  echo "fastqc \
+  --outdir=$fastQCDir \
+  $demultiplex_hd_pass_r2"
+  echo "[TIME: fastqc postTrim]"
+  time fastqc \
+  --outdir=$fastQCDir \
+  $demultiplex_hd_pass_r2
+else
+  echo "Found" $fastQCDir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_fastqc.zip
 fi
 
 ##########################################################################################################################
@@ -183,22 +195,38 @@ fi
 ##########################################################################################################################
 ##########################################################################################################################
 
-if [ ! -f $trim_Dir/$(basename $demultiplex_hd_pass .fq.gz)_trimmed.fq.gz ];
+## Read 1
+if [ ! -f $trim_Dir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz ];
 then
   echo "Running trim galore"
 
   echo " trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
-  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass"
+  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r1"
   echo "[TIME: trim galore]"
   time trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
-  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass
+  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r1
 else
-  echo "Found" $trim_Dir/$(basename $demultiplex_hd_pass .fq.gz)_trimmed.fq.gz
+  echo "Found" $trim_Dir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz
 fi
 
-###Reset file name to the trimmed fastq's
+## Read 2
+if [ ! -f $trim_Dir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz ];
+then
+  echo "Running trim galore"
 
-demultiplex_hd_pass_trimmed=$trim_Dir/$(basename $demultiplex_hd_pass .fq.gz)_trimmed.fq.gz
+  echo " trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
+  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r2"
+  echo "[TIME: trim galore]"
+  time trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
+  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r2
+else
+  echo "Found" $trim_Dir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz
+fi
+
+###Reset file name to the trimmed fastq's for both reads 1 and 2
+
+demultiplex_hd_pass_r1_trimmed=$trim_Dir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz
+demultiplex_hd_pass_r2_trimmed=$trim_Dir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -206,17 +234,32 @@ demultiplex_hd_pass_trimmed=$trim_Dir/$(basename $demultiplex_hd_pass .fq.gz)_tr
 ##########################################################################################################################
 ##########################################################################################################################
 
-if [ ! -f $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_trimmed .fq.gz)_fastqc.zip ];
+## Read 1
+if [ ! -f $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_r1_trimmed .fq.gz)_fastqc.zip ];
 then
   echo "Running fastQC postTrim"
 
-  echo "fastqc --outdir=$fastQC_trim_Dir $demultiplex_hd_pass_trimmed"
+  echo "fastqc --outdir=$fastQC_trim_Dir $demultiplex_hd_pass_r1_trimmed"
   echo "[TIME: fastqc postTrim]"
   time fastqc \
   --outdir=$fastQC_trim_Dir \
-  $demultiplex_hd_pass_trimmed
+  $demultiplex_hd_pass_r1_trimmed
 else
-  echo "Found" $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_trimmed .fq.gz)_fastqc.zip
+  echo "Found" $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_r1_trimmed .fq.gz)_fastqc.zip
+fi
+
+## Read 2
+if [ ! -f $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_r2_trimmed .fq.gz)_fastqc.zip ];
+then
+  echo "Running fastQC postTrim"
+
+  echo "fastqc --outdir=$fastQC_trim_Dir $demultiplex_hd_pass_r2_trimmed"
+  echo "[TIME: fastqc postTrim]"
+  time fastqc \
+  --outdir=$fastQC_trim_Dir \
+  $demultiplex_hd_pass_r2_trimmed
+else
+  echo "Found" $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_r2_trimmed .fq.gz)_fastqc.zip
 fi
 
 if [ $? -eq 0 ]
