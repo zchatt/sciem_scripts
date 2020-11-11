@@ -63,11 +63,7 @@ In addition to trimming the adaper sequences, this will trim low quality bases (
 ## 7a. Hybrid genome
 The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
 	
-	cat /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/hg38/hg38.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/GRCm39/GCF_000001635.27_GRCm39_genomic.fna /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/pUC19/pUC19_addgene.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/lambda/lambda.fa > hg38_GRCm39_pUC19_Lambda.fa
-
-	picard NormalizeFasta I=hg38_GRCm39_pUC19_Lambda.fa O=normalized_hg38_GRCm39_pUC19_Lambda.fa
-
-	samtools faidx normalized_hg38_GRCm39_pUC19_Lambda.fa
+	${code_location}/make_genome.pbs
 
 ## 7b. Alignment to human-mouse-pUC19-Lambda hybrid genome using scBS-MAP. 
 	
@@ -76,7 +72,7 @@ The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA
 ## 8. Split aligned .bam file to single-cells and/ or experiments
 a) Select unique reads and create cell-barcode col "CB" 
 
-	bam_in=demultiplex_R1_R2.L00.1_trimmed.bam
+	bam_in=demultiplex_illumina_trimmed_R1.bam
 
 	samtools view -h $bam_in | awk '{$5 != 0; print $0}' | awk 'BEGIN{OFS="\t"}{split($1, a, ":"); print $0,"CB:Z:"a[1]}' | samtools view -bS > tmp.bam
 
@@ -93,7 +89,37 @@ bamtools (installed on Artemis)  - handling bam files post alignment
 CGmap tools (not installed on Artemis) - post alignment bisulfite seq handling
 Clustering (Can be done using SciKit-learn - not installed on Artemis)
 
-## 9. Collect bam stats
+## 9. Collect bam stats for each experiment
+
+	module load samtools
+	cd /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/results_demultiplex_trim/cell_cluster
+	cluster_file=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/clusters.csv
+
+	# format/ remove header
+	head -1 $cluster_file > header
+	awk -F "\"*,\"*" 'FNR > 1 {print $0}' $cluster_file > tmp
+
+	# collect stats 1)#reads, 2)#reads hg38,3) #reads GRCm39, 4) #reads pUC19, 5) #reads Lambda
+	rm summary_data.csv
+	while read -r line ; do
+	cell=$(echo $line | cut -d "," -f 2)
+
+	reads1=$(samtools view -c cluster${cell}.bam)
+	reads2=$(samtools view cluster${cell}.bam | awk '{split($3,a,"r"); print a[1]}' | sort | uniq -c | grep "ch" | awk '{print $1}')
+	reads3=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "NC" | awk '{print $1}')
+	reads4=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "pUC19" | awk '{print $1}')
+	reads5=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "Lambda" | awk '{print $1}')
+
+	echo "$cell,$reads1,$reads2,$reads3,$reads4,$reads5"
+	done < tmp > summary_data.csv
+
+# plotting functions with R
+
+	${code_location}/low_level_scwgbs.R
+
+## multiqc
+pip install multiqc
+multiqc . -o multiqc_out
 
 ## By cell
 # Mean unique reads per cell  - summarise for each experiment
