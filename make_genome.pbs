@@ -1,0 +1,51 @@
+#!/bin/bash
+#PBS -P DementiaCFDNA
+#PBS -N mk_genome
+#PBS -l select=1:ncpus=24:mem=96GB
+#PBS -l walltime=24:00:00
+
+module load samtools
+module load picard
+module load bowtie2
+module load python
+module load samtools
+module load perl
+
+## export paths for bsseeker2 
+export PATH=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/:$PATH
+
+## inputs
+fastq=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/results_demultiplex_trim_100k/fastq_trim/demultiplex_illumina_trimmed_R1.fq.gz
+scbsmap_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/scBS-map/
+bs_seeker2_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/
+
+cd /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes
+
+# hg38_GRCm39_pUC19_Lambda.fa
+cat /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/hg38/hg38.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/GRCm39/GCF_000001635.27_GRCm39_genomic.fna /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/pUC19/pUC19_addgene.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/lambda/lambda.fa > hg38_GRCm39_pUC19_Lambda.fa
+picard NormalizeFasta I=hg38_GRCm39_pUC19_Lambda.fa O=normalized_hg38_GRCm39_pUC19_Lambda.fa
+samtools faidx normalized_hg38_GRCm39_pUC19_Lambda.fa
+
+# hg38_pUC19_Lambda.fa
+cat /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/hg38/hg38.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/pUC19/pUC19_addgene.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/lambda/lambda.fa > hg38_pUC19_Lambda.fa
+picard NormalizeFasta I=hg38_pUC19_Lambda.fa O=normalized_hg38_pUC19_Lambda.fa
+samtools faidx normalized_hg38_pUC19_Lambda.fa
+
+# GRCm39_pUC19_Lambda.fa
+cat /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/GRCm39/GCF_000001635.27_GRCm39_genomic.fna /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/pUC19/pUC19_addgene.fa /project/RDS-SMS-FFbigdata-RW/local_lib/genomes/lambda/lambda.fa > GRCm39_pUC19_Lambda.fa
+picard NormalizeFasta I=GRCm39_pUC19_Lambda.fa O=normalized_GRCm39_pUC19_Lambda.fa
+samtools faidx normalized_GRCm39_pUC19_Lambda.fa
+
+### build bisulfite sequencing reference genome
+python $bs_seeker2_location/bs_seeker2-build.py -f normalized_hg38_GRCm39_pUC19_Lambda.fa --aligner=bowtie2 -d /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/
+# move to bs_seeker2 location - software defaults to search for genome here
+mv /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa_bowtie2/ /project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/bs_utils/reference_genomes
+
+python $bs_seeker2_location/bs_seeker2-build.py -f normalized_hg38_pUC19_Lambda.fa --aligner=bowtie2 -d /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/
+# move to bs_seeker2 location - software defaults to search for genome here
+mv /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_pUC19_Lambda.fa_bowtie2/ /project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/bs_utils/reference_genomes
+
+python $bs_seeker2_location/bs_seeker2-build.py -f normalized_GRCm39_pUC19_Lambda.fa --aligner=bowtie2 -d /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/
+# move to bs_seeker2 location - software defaults to search for genome here
+mv /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_GRCm39_pUC19_Lambda.fa_bowtie2/ /project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/bs_utils/reference_genomes
+
