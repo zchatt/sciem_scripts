@@ -129,9 +129,9 @@ multiqc . -o multiqc_out
 # Mean alignment of each experiment
 # Number of barcodes identified compared to expected & % useable reads (uniquely aligned reads/all reads assigned to a barcode)
 
+## 10. Bam to CGmap - sorts bam files and extracts DNA methylation information into ATCGmap and CGmap format.
 
-## 10. Bam to CGmap mbin - calculated the average methylation levels in equal-length bins, across genome
-
+	${code_location}/bam_to_cgmap.pbs
 
 ## 1. CGmap coverage cgmaptools oac
 
@@ -139,3 +139,13 @@ multiqc . -o multiqc_out
 ## QuickRun - A single bash script was written to combine all the steps (1-Nth) above to this point. 
 	
 	${code_location}/demultiplex_trim_scimet.sh
+
+
+
+
+
+
+
+
+
+

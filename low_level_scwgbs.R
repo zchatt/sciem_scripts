@@ -58,3 +58,11 @@ g7<-ggplot(data=dat, aes(x=pUC19,y=log(reads_pUC19+1), fill=method)) +
 pdf("plot_adj_fqnorm_unn_posnegbox_all_breachers.pdf")
 grid.arrange(g1,g2,g3,g4,g5,g6,g7,nrow=2, ncol=2)
 dev.off()
+
+
+hist(log(dat$reads_GRCm39+1)/log(dat$reads_hg38 +1))
+
+
+
+
+
