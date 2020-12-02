@@ -26,7 +26,7 @@ data_location=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
 ## 1. Convert bcl to fastq 
 files using bcl2fastq2 software (installed on Artemis). This generates .fastq files from 4 lanes of the sequencing flowcell. The files generated are: Read_1, Index_1, Index_2, Read_2.  
 
-	${code_location}/bcl2fastq_scimet.sub
+	${code_location}/bcl2fastq_scimet.pbs
 
 ## 2a. Combine all lanes of run, rename and split I2 to I2 & I3. 
 This script merges R1, R2, I1, and I2 (which contains I2 and I3) from 4 lanes of fastq files.
