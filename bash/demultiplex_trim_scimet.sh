@@ -1,50 +1,22 @@
 #!/bin/bash
-# #PBS -P DementiaCFDNA
-# #PBS -N demultiplex_trim_scimet
-# #PBS -l select=1:ncpus=32:mem=60GB
-# #PBS -l walltime=10:00:00
-# #PBS -M plam7692@uni.sydney.edu.au
-#
-# load modules
-# module load trimgalore
-# module load perl
-# module load python/3.8.2
-# module load fastqc
-#
-# # set directories
-# data_dir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
-# cd ${data_dir}
-# code_dir=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/code/scimet_scripts
-#
-# # set variables
-# SAMPLE_NAME=Undetermined.merged
-#
-# bash ${code_dir}/demultiplex_trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir
-#
-
-# preprocessing steps: combine reads and indexes from lanes 1-4
-# ## We only had 4 lanes. This script combines R1, R2, I1, and I2 from all 4 lanes into 1 file for each of the files. Note: I2 will be split further into I2 and I3.
-# for n in 1 2 3 4; do cat /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/Undetermined_S0_L00${n}_I1_001.fastq.gz; done > Undetermined.merged.I1.fq.gz
-# for n in 1 2 3 4; do cat /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/Undetermined_S0_L00${n}_R1_001.fastq.gz; done > Undetermined.merged.R1.fq.gz
-# for n in 1 2 3 4; do cat /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/Undetermined_S0_L00${n}_R2_001.fastq.gz; done > Undetermined.merged.R2.fq.gz
-# for n in 1 2 3 4; do cat /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/Undetermined_S0_L00${n}_I2_001.fastq.gz; done > Undetermined.merged.I2_I3.fq.gz
-#
-# split I2_I3 into I2 and I3
-# zcat ${data_dir}/100000_random_i2_i3.fq.gz | awk 'NR%4==1{print$0} NR%4==2{print substr($1,1,11)} NR%4==3{print$0} NR%4==0{print substr($1,1,11)}' | gzip > 100000_random_i2.fq.gz
-# zcat ${data_dir}/100000_random_i2_i3.fq.gz | awk 'NR%4==1{print$0} NR%4==2{print substr($1,12,9)} NR%4==3{print$0} NR%4==0{print substr($1,12,9)}' | gzip > 100000_random_i3.fq.gz
-
+# The script performs demultiplexing and trimming with fastqc QC
 ## check if all arguments are passed
 if [ -z $1 ]; then
     echo "Need to submit name of sample" && exit
 fi
 
 if [ -z $2 ]; then
-    echo "Need the path to folder of data" && exit
+    echo "Need the path to data" && exit
 fi
 
 if [ -z $3 ]; then
-    echo "Need the path to folder of code" && exit
+    echo "Need the path to code" && exit
 fi
+
+if [ -z $4 ]; then
+    echo "Need barcodes file" && exit
+fi
+
 
 ## Define file names and project folder
 SAMPLE_NAME=${1}
@@ -55,6 +27,9 @@ echo "data_dir = $data_dir"
 code_dir=${3}
 echo "code_dir = $code_dir"
 
+barcodes_scimet=${4}
+echo "barcodes_scimet = $barcodes_scimet"
+
 outDir=${data_dir}"/results_demultiplex_trim"
 echo $outDir && mkdir -p $outDir
 
@@ -63,9 +38,6 @@ echo "FastQCDir is $fastQCDir" && mkdir -p $fastQCDir
 
 fastQC_trim_Dir=${outDir}"/fastQC_post_trim"
 echo "FastQCDir_trim is $fastQC_trim_Dir" && mkdir -p $fastQC_trim_Dir
-
-trim_Dir=${outDir}"/fastq_trim"
-echo "TrimmedDir is $trim_Dir" && mkdir -p ${trim_Dir}
 
 READ_1=${data_dir}/${SAMPLE_NAME}.R1.fq.gz
 READ_2=${data_dir}/${SAMPLE_NAME}.R2.fq.gz
@@ -108,19 +80,19 @@ done
 ##########################################################################################################################
 ##########################################################################################################################
 
-if [ ! -f ${outDir}"/demultiplex_R1.L00.1.fq.gz" ];
+if [ ! -f ${outDir}"/${SAMPLE_NAME}_demultiplex_R1.fq.gz" ];
 then
-  echo "Demultiplexing with HD 2"
+  echo "Demultiplexing R1 with HD==2"
 
-  echo "perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
+  echo "perl ${code_dir}/demultiplex_scimet_r1.pl \
   $READ_1:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R1"
+  $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R1"
   echo "[TIME: demultiplex_R1]"
-  time perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
+  time perl ${code_dir}/demultiplex_scimet_r1.pl \
   $READ_1:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R1
+  $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R1
 else
-  echo "Found" ${outDir}"/demultplex_R1.L00.1.fq.gz"
+  echo "Found" ${outDir}"/${SAMPLE_NAME}_demultiplex_R1.fq.gz"
 fi
 
 ##########################################################################################################################
@@ -129,27 +101,27 @@ fi
 ##########################################################################################################################
 ##########################################################################################################################
 
-if [ ! -f ${outDir}"/demultiplex_R2.L00.1.fq.gz" ];
+if [ ! -f ${outDir}"/${SAMPLE_NAME}_demultiplex_R2.fq.gz" ];
 then
-  echo "Demultiplexing with HD 2"
+  echo "Demultiplexing R2 with HD==2"
 
-  echo "perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
+  echo "perl ${code_dir}/demultiplex_scimet_r2.pl \
   $READ_2:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R2"
-  echo "[TIME: demultiplex_R1]"
-  time perl ${code_dir}/demultiplex_scimet_prav_modified.pl \
+  $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R2"
+  echo "[TIME: demultiplex_R2]"
+  time perl ${code_dir}/demultiplex_scimet_r2.pl \
   $READ_2:$INDEX_1:$INDEX_2:$INDEX_3 \
-  ${data_dir}/barcodes_scimet.txt ${outDir}/demultiplex_R2
+  $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R2
 else
-  echo "Found" ${outDir}"/demultplex_R2.L00.1.fq.gz"
+  echo "Found" ${outDir}"/${SAMPLE_NAME}_demultiplex_R2.fq.gz"
 fi
 
-## change file name variables
-demultiplex_hd_pass_r1=${outDir}/demultiplex_R1.L00.1.fq.gz
-demultiplex_hd_pass_r2=${outDir}/demultiplex_R2.L00.1.fq.gz
+## assign variable names
+demultiplex_hd_pass_r1=${outDir}/${SAMPLE_NAME}_demultiplex_R1.L00.1.fq.gz
+demultiplex_hd_pass_r2=${outDir}/${SAMPLE_NAME}_demultiplex_R2.L00.1.fq.gz
 
-demultiplex_hd_fail_r1=${outDir}/demultiplex_R1.L00.fail.1.fq.gz
-demultiplex_hd_fail_r2=${outDir}/demultiplex_R2.L00.fail.1.fq.gz
+demultiplex_hd_fail_r1=${outDir}/${SAMPLE_NAME}_demultiplex_R1.L00.fail.1.fq.gz
+demultiplex_hd_fail_r2=${outDir}/${SAMPLE_NAME}_demultiplex_R2.L00.fail.1.fq.gz
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -196,37 +168,36 @@ fi
 ##########################################################################################################################
 
 ## Read 1
-if [ ! -f $trim_Dir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz ];
+if [ ! -f $outDir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz ];
 then
   echo "Running trim galore"
 
-  echo " trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
-  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r1"
+  echo " trim_galore --quality 20 --phred33 --illumina --stringency 3 -e 0.1 \
+  --gzip --length 20 --output_dir $outDir $demultiplex_hd_pass_r1"
   echo "[TIME: trim galore]"
-  time trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
-  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r1
+  time trim_galore --quality 20 --phred33 --illumina --stringency 3 -e 0.1 \
+  --gzip --length 20 --output_dir $outDir $demultiplex_hd_pass_r1
 else
-  echo "Found" $trim_Dir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz
+  echo "Found" $outDir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz
 fi
 
 ## Read 2
-if [ ! -f $trim_Dir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz ];
+if [ ! -f $outDir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz ];
 then
   echo "Running trim galore"
 
-  echo " trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
-  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r2"
+  echo " trim_galore --quality 20 --phred33 --illumina --stringency 3 -e 0.1 \
+  --gzip --length 20 --output_dir $outDir $demultiplex_hd_pass_r2"
   echo "[TIME: trim galore]"
-  time trim_galore --quality 30 --phred33 --illumina --stringency 1 -e 0.1 \
-  --gzip --length 20 --max_n 10 --output_dir $trim_Dir $demultiplex_hd_pass_r2
+  time trim_galore --quality 20 --phred33 --illumina --stringency 3 -e 0.1 \
+  --gzip --length 20 --output_dir $outDir $demultiplex_hd_pass_r2
 else
-  echo "Found" $trim_Dir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz
+  echo "Found" $outDir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz
 fi
 
-###Reset file name to the trimmed fastq's for both reads 1 and 2
-
-demultiplex_hd_pass_r1_trimmed=$trim_Dir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz
-demultiplex_hd_pass_r2_trimmed=$trim_Dir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz
+## assign variable names
+demultiplex_hd_pass_r1_trimmed=$outDir/$(basename $demultiplex_hd_pass_r1 .fq.gz)_trimmed.fq.gz
+demultiplex_hd_pass_r2_trimmed=$outDir/$(basename $demultiplex_hd_pass_r2 .fq.gz)_trimmed.fq.gz
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -262,11 +233,3 @@ else
   echo "Found" $fastQC_trim_Dir/$(basename $demultiplex_hd_pass_r2_trimmed .fq.gz)_fastqc.zip
 fi
 
-if [ $? -eq 0 ]
-then
-  echo "Successfully completed"
-  exit 0
-else
-  echo "Script failed" >&2
-  exit 1
-fi
