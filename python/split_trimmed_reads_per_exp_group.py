@@ -1,6 +1,5 @@
 ## import necessary modules
 import sys
-import levenshtein
 import gzip
 import time
 
