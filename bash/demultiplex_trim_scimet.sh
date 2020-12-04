@@ -84,11 +84,11 @@ if [ ! -f ${outDir}"/${SAMPLE_NAME}_demultiplex_R1.fq.gz" ];
 then
   echo "Demultiplexing R1 with HD==2"
 
-  echo "perl ${code_dir}/demultiplex_scimet_r1.pl \
+  echo "perl ${code_dir}/perl/demultiplex_scimet_r1.pl \
   $READ_1:$INDEX_1:$INDEX_2:$INDEX_3 \
   $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R1"
   echo "[TIME: demultiplex_R1]"
-  time perl ${code_dir}/demultiplex_scimet_r1.pl \
+  time perl ${code_dir}/perl/demultiplex_scimet_r1.pl \
   $READ_1:$INDEX_1:$INDEX_2:$INDEX_3 \
   $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R1
 else
@@ -105,11 +105,11 @@ if [ ! -f ${outDir}"/${SAMPLE_NAME}_demultiplex_R2.fq.gz" ];
 then
   echo "Demultiplexing R2 with HD==2"
 
-  echo "perl ${code_dir}/demultiplex_scimet_r2.pl \
+  echo "perl ${code_dir}/perl/demultiplex_scimet_r2.pl \
   $READ_2:$INDEX_1:$INDEX_2:$INDEX_3 \
   $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R2"
   echo "[TIME: demultiplex_R2]"
-  time perl ${code_dir}/demultiplex_scimet_r2.pl \
+  time perl ${code_dir}/perl/demultiplex_scimet_r2.pl \
   $READ_2:$INDEX_1:$INDEX_2:$INDEX_3 \
   $barcodes_scimet ${outDir}/${SAMPLE_NAME}_demultiplex_R2
 else
