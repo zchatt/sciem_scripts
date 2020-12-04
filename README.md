@@ -38,23 +38,40 @@ The I2 index contains 2 barcode sequences concataneted together into a single fi
 
 	${code_location}/PBS/split_i2.pbs
 
-## 3a. Demultiplexing R1 and R2.
-To assign individual reads to a particular barcode/ single-cell, index sequences (I1, I2 and I3) are compared to a list of expected barcodes. A hamming distance <3 algorithm is used to for index match. A concatenated barcode consisting of I1,I2 and I3 is then written to each read name for post-trimming and/or post-alignment demultiplexing. Each R1 and R2 are processed indepedntly. The following scripts are modified from CPT_HiSeq_fq_to_methCPT_split_hamming_PerLane_SE.pl as generously supplied by Andrew Adey.
-## 3b. FastQC pre-trim
-## 3c. Trimming
-In addition to trimming the adaper sequences, this will trim low quality bases (denoted by the phred score of 20). Also, any read sequences resulting in a length of 20 bp or lower will not be included in the output file.  
-## 3d. FastQC post-trim
+## 3. Demultiplexing R1 and R2, QC and Trimming
+a) To assign individual reads to a particular barcode/ single-cell, index sequences (I1, I2 and I3) are compared to a list of expected barcodes. A hamming distance <3 algorithm is used to for index match. A concatenated barcode consisting of I1,I2 and I3 is then written to each read name for post-trimming and/or post-alignment demultiplexing. Each R1 and R2 are processed indepedntly. The following scripts are modified from CPT_HiSeq_fq_to_methCPT_split_hamming_PerLane_SE.pl as generously supplied by Andrew Adey.
+b) fastqc on pre-trimmed .fastq files
+c) Trimming - In addition to trimming the adaper sequences, this will trim low quality bases (denoted by the phred score of 20). Also, any read sequences resulting in a length of 20 bp or lower will not be included in the output file.  
+d) fastqc on post-trimmed .fastq files
 
 	${code_location}/PBS/demultiplex_trim_scimet.pbs
+
+## 4. Experiment specific QC
+
+	FASTQ=${data_dir}/100000_random_demultiplex_R1.L00.1_trimmed.fq.gz
+	python ${code_location}/python/split_fq_i7.py $FASTQ ${code_location}/data/barcodes_scimet.txt
+
+	module load python
+	module load fastqc
+	pip install multiqc
+
+	mkdir fastqc_perexp
+	fastqc *passed_reads*
+	mv *passed_reads_fastqc* fastqc_perexp
+	cd fastqc_perexp
+
+	multiqc . -o .
 
 ## 4. Hybrid genome generation
 The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
 	
-	${code_location}/make_genome.pbs
+	${code_location}/PBS/make_genome.pbs
 
-## 5. Alignment using scBS-MAP. 
+## 5. scBS-MAP alignment.
 	
-	${code_location}/scbsmap.pbs
+	${code_location}/PBS/scbsmap.pbs
+
+
 
 ## 8. Split aligned .bam file to single-cells and/ or experiments
 a) Select unique reads and create cell-barcode col "CB" 
@@ -126,6 +143,9 @@ b) Split .bam file based on "Cluster". The "Cluster" can be set to per-cell, per
 ## QuickRun - A single bash script was written to combine all the steps (1-Nth) above to this point. 
 	
 	${code_location}/demultiplex_trim_scimet.sh
+
+
+## Bismark align, DNA methylation extraction and M-bias plotting.
 
 
 

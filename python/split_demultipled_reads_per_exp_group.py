@@ -39,6 +39,8 @@ with gzip.open(read_file, "rt") as inf:
                             break
                         # print(len(barcode))
                         for key, value in lib_i7.items():
+                            print(key)
+                            print(value)
                             if barcode == value:
                                 experiment_key = key
                         if experiment_key in n9:
