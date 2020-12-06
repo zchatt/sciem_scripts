@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -P DementiaCFDNA
+#PBS -N mk_genome_bis
+#PBS -l select=1:ncpus=24:mem=96GB
+#PBS -l walltime=24:00:00
+
+module load samtools
+module load bismark
+
+## specify variables
+data_dir=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda
+BISGENOME=normalized_hg38_GRCm39_pUC19_Lambda.fa
+
+cd ${data_dir}
+
+# faidx
+samtools faidx ${BISGENOME}
+
+# bismark genome preparation
+bismark_genome_preparation --bowtie2 --verbose ${BISGENOME}
