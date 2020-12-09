@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -P DementiaCFDNA
-#PBS -N demultiplex_trim_scimet
-#PBS -l select=1:ncpus=32:mem=60GB
+#PBS -N trim_scimet
+#PBS -l select=1:ncpus=8:mem=24GB
 #PBS -l walltime=10:00:00
 #PBS -M plam7692@uni.sydney.edu.au
 
@@ -12,19 +12,19 @@ module load python/3.8.2
 module load fastqc
 
 # set directories and variables
-data_dir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq
+data_dir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim
 code_dir=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/scimet_scripts
 
 cd ${data_dir}
 
 SAMPLE_NAME=emmg
-bash ${code_dir}/bash/demultiplex_trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir $barcodes_scimet
+bash ${code_dir}/bash/trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir
 
 SAMPLE_NAME=emn9
-bash ${code_dir}/bash/demultiplex_trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir $barcodes_scimet
+bash ${code_dir}/bash/trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir
 
 SAMPLE_NAME=mg
-bash ${code_dir}/bash/demultiplex_trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir $barcodes_scimet
+bash ${code_dir}/bash/trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir
 
 SAMPLE_NAME=n9
-bash ${code_dir}/bash/demultiplex_trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir $barcodes_scimet
+bash ${code_dir}/bash/trim_scimet.sh $SAMPLE_NAME $data_dir $code_dir

@@ -12,7 +12,7 @@ module load python/3.8.2
 
 ## specify variables
 data_dir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/100K_test/results_demultiplex_trim
-code_dir=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/code/scimet_scripts
+code_dir=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo
 BISGENOME=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda # reference genome directory (should have run bismark_genome_prepation before alignment)
 NUM_CORES=2
 FASTQ=${data_dir}/100000_random_demultiplex_R1.L00.1_trimmed.fq.gz

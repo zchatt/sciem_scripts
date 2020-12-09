@@ -16,7 +16,7 @@ _scimet_scripts_ is a collection of scripts used for the analysis of single-cell
 [trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) (0.36)
 
 ### Inputs
-code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/code/scimet_scripts
+code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/scimet_scripts
 data_location=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
 
 ## Pipeline
@@ -48,6 +48,7 @@ d) fastqc on post-trimmed .fastq files
 
 ## 4. Experiment specific QC
 
+Pre-trim
 	FASTQ=${data_dir}/100000_random_demultiplex_R1.L00.1_trimmed.fq.gz
 	python ${code_location}/python/split_fq_i7.py $FASTQ ${code_location}/data/barcodes_scimet.txt
 
@@ -62,6 +63,9 @@ d) fastqc on post-trimmed .fastq files
 
 	multiqc . -o .
 
+Post-trim
+
+
 ## 4. Hybrid genome generation
 The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
 	
@@ -71,9 +75,7 @@ The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA
 	
 	${code_location}/PBS/scbsmap.pbs
 
-
-
-## 8. Split aligned .bam file to single-cells and/ or experiments
+## 6. Split aligned .bam file to single-cells and/ or experiments
 a) Select unique reads and create cell-barcode col "CB" 
 
 	bam_in=demultiplex_illumina_trimmed_R1.bam

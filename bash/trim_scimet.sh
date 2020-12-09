@@ -17,7 +17,6 @@ fi
 #     echo "Need barcodes file" && exit
 # fi
 
-
 ## Define file names and project folder
 SAMPLE_NAME=${1}
 
