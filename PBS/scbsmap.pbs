@@ -2,7 +2,7 @@
 #PBS -P DementiaCFDNA
 #PBS -N scbs_map
 #PBS -l select=1:ncpus=16:mem=96GB
-#PBS -l walltime=16:00:00
+#PBS -l walltime=4:00:00
 #PBS -M zacchatt@gmail.com
 
 module load bowtie2
@@ -14,7 +14,7 @@ module load perl
 export PATH=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/:$PATH
 
 # run example
-# qsub -v fastq="emmg_demultiplex_R1.L00.1_trimmed.fq.gz" -v indir="/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/results_demultiplex_trim" scbsmap.pbs
+# qsub -v "fastq=emmg_demultiplex_R1.L00.1_trimmed.fq.gz, indir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/results_demultiplex_trim" scbsmap.pbs
 
 cd $indir
 

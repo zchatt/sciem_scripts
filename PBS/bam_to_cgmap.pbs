@@ -7,13 +7,13 @@
 module load cgmaptools
 module load parallel
 
-indir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim
-ref_genome=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/bs_utils/reference_genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa
+indir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim/per_cell
+ref_genome=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda/normalized_hg38_GRCm39_pUC19_Lambda.fa
 
 cd $indir
 
 # make list of .bam files to convert
-ls *trimmed.bam > bam_list
+ls *.bam > bam_list
 # sort bam file
 parallel --xapply -j+0 --eta samtools sort {1} -o {1.}_sorted.bam :::: bam_list
 # convert bam to cgmap

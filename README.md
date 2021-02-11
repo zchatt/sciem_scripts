@@ -46,25 +46,20 @@ d) fastqc on post-trimmed .fastq files
 
 	${code_location}/PBS/demultiplex_trim_scimet.pbs
 
-## 4. Experiment specific QC
-
-Pre-trim
-	FASTQ=${data_dir}/100000_random_demultiplex_R1.L00.1_trimmed.fq.gz
+## 4. Split fastq by experiment
+	FASTQ=${data_dir}/Undetermined.merged_demultiplex_R1.L00.1.fq.gz
 	python ${code_location}/python/split_fq_i7.py $FASTQ ${code_location}/data/barcodes_scimet.txt
 
-	module load python
-	module load fastqc
-	pip install multiqc
+## 5. fastqc/multiqc per experiment
 
-	mkdir fastqc_perexp
-	fastqc *passed_reads*
-	mv *passed_reads_fastqc* fastqc_perexp
-	cd fastqc_perexp
+	${code_location}/PBS/fqc_mqc.pbs
 
-	multiqc . -o .
+## 6. Trimming per experiment
 
-Post-trim
+	${code_location}/PBS/trim_scimet.pbs
 
+## 7. Trimming 2 
+	${code_location}/PBS/trim2_scimet.pbs
 
 ## 4. Hybrid genome generation
 The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa. The hybrid hg38_GRCm39_pUC19_Lambda.fa genome was created using the following scripts;
@@ -75,80 +70,67 @@ The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA
 	
 	${code_location}/PBS/scbsmap.pbs
 
-## 6. Split aligned .bam file to single-cells and/ or experiments
-a) Select unique reads and create cell-barcode col "CB" 
+## 6. Annotate .bam with cell and experiment relevent info columns
 
-	bam_in=demultiplex_illumina_trimmed_R1.bam
+	for bam_in in *trimmed2.bam;do
+	echo $bam_in 
+	samtools view -h $bam_in | awk '{$5 != 0; print $0}' | awk 'BEGIN{OFS="\t"}{split($1, a, ":"); print $0,"CB:Z:"a[1]}' | awk -v name=$bam_in 'BEGIN{OFS="\t"}{split($1, a, ":"); print $0,"EX:Z:"name}' | samtools view -bS > ${bam_in%%.bam}_CB.bam
+	done
 
-	samtools view -h $bam_in | awk '{$5 != 0; print $0}' | awk 'BEGIN{OFS="\t"}{split($1, a, ":"); print $0,"CB:Z:"a[1]}' | samtools view -bS > tmp.bam
+## 7. Split aligned .bam file to single-cells and/ or experiments. Note; needs to be just one .bam file as python will create all cluster.bam subs to spill into.
 
-b) Split .bam file based on "Cluster". The "Cluster" can be set to per-cell, per-experiment or any other grouping.
+	samtools merge merged_trimmed2.bam *_trimmed2_CB.bam
+	qsub -v bam_in=merged_trimmed2.bam split_bam.pbs
+
+## 8. Bam to CGmap - sorts bam files and extracts DNA methylation information into ATCGmap and CGmap format.
+
+	${code_location}/PBS/bam_to_cgmap.pbs
+
+## 9a. Quantify cross-over. Note 1) cluster, 2) origin, 3) not-origin
+
+	rm tmp
+	while read x y z; do
+	comm -23 <(samtools view realign_${z}/cluster${x}.bam | awk '{print $1}' | sort) <(samtools view realign_${y}/cluster${x}.bam | awk '{print $1}' | sort) | wc -l >> tmp 
+	done < cluster_origin.txt
+	mv tmp cross_over.txt
+
+## 9b. select thresholded nuclei; 100 reads/ <10% cross-over
 	
-	cluster_file=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/clusters.csv
+	# determine high quality nuclei selection threshold & plotting
+	${code_location}/R/crossover_scwgbs.R
 
-	module load python
-	${code_location}/split_bam.py $cluster_file tmp.bam
+	# create soft link with threshold nuclei
+	cd  /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim/nuclei_select
+	while read x y z; do
+	ln -s ../realign_${y}/cluster${x}.CGmap.gz .
+	done < nuclei_select.txt
 
-## In Development - Additional steps to add into pip
-	bbmap (installed on Artemis) - why???
-	bamtools (installed on Artemis)  - handling bam files post alignment
-	CGmap tools (not installed on Artemis) - post alignment bisulfite seq handling
-	Clustering (Can be done using SciKit-learn - not installed on Artemis)
+## 10. Global DNA Methyltion statistics/ cell
 
-## 9. Collect bam stats for each experiment
+	for cgmap in *CGmap.gz;do
+	echo ${cgmap%%.CGmap.gz}
+	cgmaptools mstat -i ${cgmap%%.CGmap.gz}.CGmap.gz -c 1 -p ${cgmap%%.CGmap.gz} > ${cgmap%%.CGmap.gz}.mstat.data
+	done
 
-	module load samtools
-	cd /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/results_demultiplex_trim/cell_cluster
-	cluster_file=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/clusters.csv
+	rm mean_mC
+	sed -n '1 p' cluster749.mstat.data >> mean_mC
+	for cgmap in *.mstat.data;do
+	awk -v a=${cgmap%%.mstat.data} '{print $0,a}' $cgmap | sed -n '2 p' >> mean_mC
+	done
 
-	# format/ remove header
-	head -1 $cluster_file > header
-	awk -F "\"*,\"*" 'FNR > 1 {print $0}' $cluster_file > tmp
+## Plotting functions 
+	# Tracking reads
+	${code_location}/R/read_tracking_plots
 
-	# collect stats 1)#reads, 2)#reads hg38,3) #reads GRCm39, 4) #reads pUC19, 5) #reads Lambda
-	rm summary_data.csv
-	while read -r line ; do
-	cell=$(echo $line | cut -d "," -f 2)
+	# M-bias
+	${code_location}/R/m_bias_scbsmap.R
 
-	reads1=$(samtools view -c cluster${cell}.bam)
-	reads2=$(samtools view cluster${cell}.bam | awk '{split($3,a,"r"); print a[1]}' | sort | uniq -c | grep "ch" | awk '{print $1}')
-	reads3=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "NC" | awk '{print $1}')
-	reads4=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "pUC19" | awk '{print $1}')
-	reads5=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "Lambda" | awk '{print $1}')
+	# tSNE of global DNA methylation
+	${code_location}/R/NMF_tSNE.R
 
-	echo "$cell,$reads1,$reads2,$reads3,$reads4,$reads5"
-	done < tmp > summary_data.csv
-
-# plotting functions with R
-
-	${code_location}/low_level_scwgbs.R
-
-## multiqc
+	# multiqc
 	pip install multiqc
 	multiqc . -o multiqc_out
-
-## By cell
-	# Mean unique reads per cell  - summarise for each experiment
-	# Collision rate; 1) % unique aligned mouse/ human genome for each cell 2) set threshold for annotating mouse OR human (% of cells distinctly mouse or human) 3) within distinct mouse or human % of reads uniquely aligned to other.
-
-## By experiment
-	# Mean alignment of each experiment
-	# Number of barcodes identified compared to expected & % useable reads (uniquely aligned reads/all reads assigned to a barcode)
-
-## 10. Bam to CGmap - sorts bam files and extracts DNA methylation information into ATCGmap and CGmap format.
-
-	${code_location}/bam_to_cgmap.pbs
-
-## 1. CGmap coverage cgmaptools oac
-
-
-## QuickRun - A single bash script was written to combine all the steps (1-Nth) above to this point. 
-	
-	${code_location}/demultiplex_trim_scimet.sh
-
-
-## Bismark align, DNA methylation extraction and M-bias plotting.
-
 
 
 
