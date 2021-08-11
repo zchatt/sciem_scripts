@@ -1,0 +1,28 @@
+# scripts to summarise the cgmap files produced per experiment.
+
+module load cgmaptools
+
+indir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim
+
+cd $indir
+
+# split to mouse, human and controls
+for i in *trimmed2.CGmap.gz;do
+zcat $i | grep "NC_" | gzip > ${i%%.CGmap.gz}_GRCm39.CGmap.gz
+zcat $i | grep "chr" | gzip > ${i%%.CGmap.gz}_hg38.CGmap.gz
+done
+
+for i in *trimmed2.CGmap.gz;do
+cgmaptools mbin -i ${i%%.CGmap.gz}_GRCm39.CGmap.gz -B 100000000 -c 4 -C CG -f png -t ${i%%.CGmap.gz}_GRCm39_CG -p ${i%%.CGmap.gz}_GRCm39_CG > ${i%%.CGmap.gz}_mbin.GRCm39_CG.data
+cgmaptools mbin -i ${i%%.CGmap.gz}_hg38.CGmap.gz -B 100000000 -c 4 -C CG -f png -t ${i%%.CGmap.gz}_hg38_CG -p ${i%%.CGmap.gz}_hg38_CG > ${i%%.CGmap.gz}_mbin.hg38_CG.data
+done
+
+# count human and mouse covered cytosines in cgmap files
+for i in *trimmed2.CGmap.gz;do
+echo ${i%%.CGmap.gz}_GRCm39.CGmap.gz
+zcat ${i%%.CGmap.gz}_GRCm39.CGmap.gz | wc -l 
+zcat ${i%%.CGmap.gz}_hg38.CGmap.gz | wc -l
+done
+
+
+cgmaptools mmbin -l WG.CGmap.gz,RR.CGmap.gz,RR2.CGmap.gz,merge.CGmap.gz -c 4 -B 2000 | gawk '{printf("%s:%s-%s", $1, $2, $3); for(i=4;i<=NF;i++){printf("\t%s", $i);} printf("\n");}' > mmbin

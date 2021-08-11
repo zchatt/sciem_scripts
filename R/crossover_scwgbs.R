@@ -64,7 +64,6 @@ pdf(file="crossover_density_scwgbs.pdf")
 grid.arrange(g1,nrow=2, ncol=2)
 dev.off()
 
-
 # plot reads/cell
 g2<-ggplot(data=dat, aes(x=library,y=cross_over_prc, fill=library)) + 
   geom_point(position = position_jitterdodge(),alpha=0.5, aes(colour = library)) + 
@@ -119,4 +118,19 @@ pdf(file="barplots_origin_passEMEperlib_scwgbs.pdf")
 grid.arrange(g1,g2,nrow=2, ncol=2)
 dev.off()
 
+# reads v cross over good quality nuclei
+dplot <- dat[dat$R10_CO17 == "TRUE",]
+ggplot(data=dplot, aes(y=cross_over_prc,x=log10(reads_origin), fill=library)) + 
+  geom_point(alpha=0.5, aes(colour = library)) + 
+  ylab("cross-over (%)") + theme_bw() + xlab("log10(reads)") + geom_density_2d() + ylim(0,25)
 
+# plot reads/cell
+g2<-ggplot(data=dplot, aes(x=library,y=cross_over_prc, fill=library)) + 
+  geom_point(position = position_jitterdodge(),alpha=0.5, aes(colour = library)) + 
+  geom_boxplot(alpha=0.6,outlier.alpha=0,) + ylab("cross-over (%)") + theme_bw() + xlab("") + 
+  theme(legend.position="none")
+
+t.test(dplot$cross_over_prc[dplot$library %in% c("sciEMMG","sciEMN9")],
+       dplot$cross_over_prc[dplot$library %in% c("sciMETMG","sciMETN9")])
+
+mean(dplot$cross_over_prc[dplot$library %in% c("sciEMMG")])

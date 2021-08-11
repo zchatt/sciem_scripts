@@ -1,0 +1,44 @@
+#!/bin/bash
+#PBS -P DementiaCFDNA
+#PBS -N split_bam
+#PBS -l select=1:ncpus=8:mem=24GB
+#PBS -l walltime=4:00:00
+
+module load samtools
+module load python
+module load samtools
+
+## run example
+# qsub -v bam_in=merged_trimmed2.bam split_bam.pbs
+# inputs
+
+code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/scimet_scripts/python
+indir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim
+cluster_file=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/clusters.csv
+
+cd $indir
+
+# Split .bam file based on "Cluster". The "Cluster" can be set to per-cell, per-experiment or any other grouping.
+${code_location}/split_bam.py $cluster_file ${bam_in}
+
+# Collect bam stats for each cell
+# format/ remove header
+head -1 $cluster_file > header
+awk -F "\"*,\"*" 'FNR > 1 {print $0}' $cluster_file > tmp
+
+# collect stats 1)#reads, 2)#reads hg38,3) #reads GRCm39, 4) #reads pUC19, 5) #reads Lambda
+rm summary_data.csv
+while read -r line ; do
+cell=$(echo $line | cut -d "," -f 2)
+
+reads1=$(samtools view -c cluster${cell}.bam)
+reads2=$(samtools view cluster${cell}.bam | awk '{split($3,a,"r"); print a[1]}' | sort | uniq -c | grep "ch" | awk '{print $1}')
+reads3=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "NC" | awk '{print $1}')
+reads4=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "pUC19" | awk '{print $1}')
+reads5=$(samtools view cluster${cell}.bam | awk '{split($3,a,"_"); print a[1]}' | sort | uniq -c | grep "Lambda" | awk '{print $1}')
+
+echo "$cell,$reads1,$reads2,$reads3,$reads4,$reads5"
+done < tmp > summary_data.csv
+
+
+

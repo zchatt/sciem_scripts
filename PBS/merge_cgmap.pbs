@@ -1,0 +1,65 @@
+#!/bin/bash
+#PBS -P DementiaCFDNA
+#PBS -N merge_cgmap
+#PBS -l select=1:ncpus=8:mem=24GB
+#PBS -l walltime=12:00:00
+
+module load cgmaptools
+
+# script merges cgmap files from same experiment
+
+# input
+cd  /project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/fastq/results_demultiplex_trim/nuclei_select
+cluster_file=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/clusters.csv
+
+cgmaptools merge2 cgmap -1 cluster1.CGmap.gz -2 cluster2.CGmap.gz | gzip > merge.CGmap.gz
+while IFS=, read x y z; do
+if [ -f cluster${y}.CGmap.gz ]; then
+echo "cluster${y}.CGmap.gz exists."
+cgmaptools merge2 cgmap -1 merge.CGmap.gz -2 cluster${y}.CGmap.gz > merge.CGmap
+gzip -f merge.CGmap
+fi
+#echo echo "cluster${y}.CGmap.gz does not exist."
+done < <(awk -F',' '($3=="sciMETN9") {print $0}' $cluster_file | awk 'NR>2')
+mv merge.CGmap.gz merge_sciMETN9.CGmap.gz
+
+cgmaptools merge2 cgmap -1 cluster2305.CGmap.gz -2 cluster2306.CGmap.gz | gzip > merge.CGmap.gz
+while IFS=, read x y z; do
+if [ -f cluster${y}.CGmap.gz ]; then
+echo "cluster${y}.CGmap.gz exists."
+cgmaptools merge2 cgmap -1 merge.CGmap.gz -2 cluster${y}.CGmap.gz > merge.CGmap
+gzip -f merge.CGmap
+fi
+#echo echo "cluster${y}.CGmap.gz does not exist."
+done < <(awk -F',' '($3=="sciMETMG") {print $0}' $cluster_file | awk 'NR>2')
+mv merge.CGmap.gz merge_sciMETMG.CGmap.gz
+
+cgmaptools merge2 cgmap -1 cluster4609.CGmap.gz -2 cluster4610.CGmap.gz | gzip > merge.CGmap.gz
+while IFS=, read x y z; do
+if [ -f cluster${y}.CGmap.gz ]; then
+echo "cluster${y}.CGmap.gz exists."
+cgmaptools merge2 cgmap -1 merge.CGmap.gz -2 cluster${y}.CGmap.gz > merge.CGmap
+gzip -f merge.CGmap
+fi
+#echo echo "cluster${y}.CGmap.gz does not exist."
+done < <(awk -F',' '($3=="sciEMMG") {print $0}' $cluster_file | awk 'NR>2')
+mv merge.CGmap.gz merge_sciEMMG.CGmap.gz
+
+cgmaptools merge2 cgmap -1 cluster5377.CGmap.gz -2 cluster5388.CGmap.gz | gzip > merge.CGmap.gz
+while IFS=, read x y z; do
+if [ -f cluster${y}.CGmap.gz ]; then
+echo "cluster${y}.CGmap.gz exists."
+cgmaptools merge2 cgmap -1 merge.CGmap.gz -2 cluster${y}.CGmap.gz > merge.CGmap
+gzip -f merge.CGmap
+fi
+#echo echo "cluster${y}.CGmap.gz does not exist."
+done < <(awk -F',' '($3=="sciEMN9") {print $0}' $cluster_file | awk 'NR>2')
+mv merge.CGmap.gz merge_sciEMN9.CGmap.gz
+
+# also merge by bisulfite or EMseq
+cgmaptools merge2 cgmap -1 merge_sciEMMG.CGmap.gz -2 merge_sciEMN9.CGmap.gz | gzip > merge_sciEM.CGmap.gz
+cgmaptools merge2 cgmap -1 merge_sciMETMG.CGmap.gz -2 merge_sciMETN9.CGmap.gz | gzip > merge_sciMET.CGmap.gz
+
+
+
+

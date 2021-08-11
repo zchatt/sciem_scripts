@@ -118,6 +118,12 @@ The hybrid hg38_GRCm39_pUC19_Lambda.fa is located /project/RDS-FMH-DementiaCFDNA
 	awk -v a=${cgmap%%.mstat.data} '{print $0,a}' $cgmap | sed -n '2 p' >> mean_mC
 	done
 
+## 11. Plotting DNA methylation density accross gene bodies per experiment
+	
+	${code_location}/PBS/merge_cgmap.pbs
+	${code_location}/bash/
+
+
 ## Plotting functions 
 	# Tracking reads
 	${code_location}/R/read_tracking_plots

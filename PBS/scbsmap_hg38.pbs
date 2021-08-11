@@ -1,0 +1,33 @@
+#!/bin/bash
+#PBS -P FFbigdata
+#PBS -N scbs_map_hg38
+#PBS -l select=1:ncpus=20:mem=96GB
+#PBS -l walltime=1:00:00
+#PBS -M zacchatt@gmail.com
+
+module load bowtie2
+module load python
+module load samtools
+module load perl
+
+## export paths for bsseeker2 
+export PATH=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/:$PATH
+indir=/project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/results_demultiplex_trim/split_fq/
+
+# run example
+# qsub -v "fastq=emmg_demultiplex_R1.L00.1_trimmed.fq.gz, indir=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet/results_demultiplex_trim" scbsmap.pbs
+cd $indir
+
+## inputs
+scbsmap_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/scBS-map/
+bs_seeker2_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/
+ref_genome=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/bs_utils/reference_genomes/normalized_hg38_pUC19_Lambda.fa
+
+### build bisulfite sequencing reference genome
+#cd /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/
+#python $bs_seeker2_location/bs_seeker2-build.py -f normalized_hg38_GRCm39_pUC19_Lambda.fa --aligner=bowtie2 -d /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/
+# move to bs_seeker2 location - software defaults to search for genome here
+#mv /project/RDS-FMH-DementiaCFDNA-RW/local_lib/genomes/normalized_hg38_GRCm39_pUC19_Lambda.fa_bowtie2/ /project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/bs_utils/reference_genomes
+
+## align with scbsmap
+perl $scbsmap_location/scBS-map.pl -l 9 -p 20 -n 10 -f $fastq -g $ref_genome -o $(basename ${fastq%.fq}).bam
