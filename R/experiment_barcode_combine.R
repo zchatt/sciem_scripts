@@ -43,4 +43,4 @@ id3 <- merge(id2,i5i7,by="sciMET_i5.i7")
 
 # write to files
 index_final <- id3
-write.table(index_final,file="sci_exp_130421.csv",quote=FALSE)
+write.table(index_final,file="sci_experiment.txt",sep='\t', quote=FALSE, row.names=FALSE)
