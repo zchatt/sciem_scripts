@@ -1,6 +1,6 @@
 #!/bin/bash
 BAM1=$1
-BAM2=#2
+BAM2=$2
 
 samtools view $BAM1 | head -10000 > ${BAM1%%.bam}_R1.sam
 samtools view $BAM2 | head -10000 > ${BAM2%%.bam}_R2.sam
