@@ -1,4 +1,8 @@
 #!/bin/bash
+#PBS -P DementiaCFDNA
+#PBS -N run1
+#PBS -l select=1:ncpus=32:mem=60GB
+#PBS -l walltime=10:00:00
 
 module load bcl2fastq2
 module load trimgalore
@@ -72,7 +76,7 @@ export PATH=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/BSseeker2-2.1.1/:$PATH
 #mkdir ${runfolder_dir}/fq_split
 cd ${runfolder_dir}/fq_split
 #demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R1.L00.1_trimmed2.fq.gz out=%_R1.fq length=31 prefixmode=t
-demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed3.fq.gz out=%_R2.fq length=31 prefixmode=t
+#demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed3.fq.gz out=%_R2.fq length=31 prefixmode=t
 
 ## 5a. scBS-MAP alignment of R1 through split lists
 # cd ${runfolder_dir}/fq_split
@@ -83,20 +87,20 @@ demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_
 
 # for i in /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/fq_split/split_lists/*;do
 #    echo $(basename $i)
-#    qsub -v split_list=$(basename $i) /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/scbsmap_splitlist.pbs
+#    qsub -v split_list=$i /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/scbsmap_splitlist.pbs
 # done
 
-## 5b. scBS-MAP alignment of R1 through split lists
-cd ${runfolder_dir}/fq_split
-mkdir split_lists2
-ls *_R2.fq  > tmp
-split -l 50 tmp
-mv x* split_lists2/
+# ## 5b. scBS-MAP alignment of R1 through split lists
+# cd ${runfolder_dir}/fq_split
+# mkdir split_lists2
+# ls *_R2.fq  > tmp
+# split -l 100 tmp
+# mv x* split_lists2/
 
-for i in /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/fq_split/split_lists2/*;do
-   echo $(basename $i)
-   qsub -v split_list=$(basename $i) /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/scbsmap_splitlist.pbs
-done
+# for i in /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/fq_split/split_lists2/*;do
+#    echo $(basename $i)
+#    qsub -v split_list=$i /project/RDS-FMH-FFEPIGENETICS-RW/scwgbs/210804_A00152_0453_AHHGWYDRXY/scbsmap_splitlist.pbs
+# done
 
 # 6. pseudo pair SE aligned .bam files
 cd ${runfolder_dir}/fq_split
@@ -105,6 +109,19 @@ for i in ${runfolder_dir}/fq_split/*_R1.bam;do
    echo $(basename ${i%%_R1.bam})_R2.bam
    ${code_dir}/bash/pseudopair_bam.sh $(basename $i) $(basename $i)
 done
+
+# 7. samtools stats
+cd ${runfolder_dir}/fq_split
+for i in ${runfolder_dir}/fq_split/*_pseudopaired.sam;do
+	echo $(basename $i)
+	samtools stats $i > ${i%%.sam}.stats
+done
+
+
+
+
+
+
 
 
 
@@ -128,22 +145,22 @@ done
 #fastqc *fq.gz
 #multiqc . -o .
 
-## 6b. split and QC of R2
-mkdir ${runfolder_dir}/fq_split
-cd ${runfolder_dir}/fq_split
-demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1.fq.gz out=%_R1.fq length=31 prefixmode=t
-demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed.fq.gz out=%_trimmed_R1.fq length=31 prefixmode=t
-demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed2.fq.gz out=%_trimmed2_R1.fq length=31 prefixmode=t
-demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed3.fq.gz out=%_trimmed3_R1.fq length=31 prefixmode=t
-#gzip *.fq
-#fastqc *fq.gz
+# ## 6b. split and QC of R2
+# mkdir ${runfolder_dir}/fq_split
+# cd ${runfolder_dir}/fq_split
+# demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1.fq.gz out=%_R1.fq length=31 prefixmode=t
+# demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed.fq.gz out=%_trimmed_R1.fq length=31 prefixmode=t
+# demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed2.fq.gz out=%_trimmed2_R1.fq length=31 prefixmode=t
+# demuxbyname.sh in=${runfolder_dir}/results_demultiplex_trim/Undetermined.merged_demultiplex_R2.L00.1_trimmed3.fq.gz out=%_trimmed3_R1.fq length=31 prefixmode=t
+# #gzip *.fq
+# #fastqc *fq.gz
 
-## 5. scBS-MAP alignment of R1
-cd ${runfolder_dir}/results_demultiplex_trim
-# FQ=Undetermined.merged_demultiplex_R1.L00.1_trimmed2.fq.gz
-# perl $scbsmap_location/scBS-map.pl -l 10 -p 20 -n 10 -f $FQ -g $ref_genome -o ${FQ%%_trimmed2.fq.gz}.bam
-FQ=Undetermined.merged_demultiplex_R2.L00.1_trimmed3.fq.gz
-perl $scbsmap_location/scBS-map.pl -l 10 -p 20 -n 10 -f $FQ -g $ref_genome -o ${FQ%%_trimmed3.fq.gz}.bam
+# ## 5. scBS-MAP alignment of R1
+# cd ${runfolder_dir}/results_demultiplex_trim
+# # FQ=Undetermined.merged_demultiplex_R1.L00.1_trimmed2.fq.gz
+# # perl $scbsmap_location/scBS-map.pl -l 10 -p 20 -n 10 -f $FQ -g $ref_genome -o ${FQ%%_trimmed2.fq.gz}.bam
+# FQ=Undetermined.merged_demultiplex_R2.L00.1_trimmed3.fq.gz
+# perl $scbsmap_location/scBS-map.pl -l 10 -p 20 -n 10 -f $FQ -g $ref_genome -o ${FQ%%_trimmed3.fq.gz}.bam
 
 
 #### intermediate testing scripts ####
