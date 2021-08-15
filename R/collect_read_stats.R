@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+library(R.utils)
 ### collect expeirment stats and bind to experiment sheet from experiment_barcode_combine.R
 # local data for testing
 # dat <- read.delim("/Users/zacc/USyd/scWGBS/sci_experiment.txt", sep='\t', header=T)
