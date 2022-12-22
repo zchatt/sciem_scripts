@@ -16,8 +16,8 @@ _sciem_scripts_ is a collection of scripts used for the analysis of "Single‑ce
 [trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) (0.36)
 
 ### Inputs
-#code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/sciem_scripts
-#data_location=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
+code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/sciem_scripts
+data_location=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
 
 ## Pipeline
 
