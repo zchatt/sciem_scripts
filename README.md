@@ -1,5 +1,5 @@
-# scimet_scripts
-_scimet_scripts_ is a collection of scripts used for the analysis of single-cell combinatorial indexing Whole Genome Bisulfite Sequencing (WGBS) data.
+# sciem_scripts
+_sciem_scripts_ is a collection of scripts used for the analysis of "Single‑cell DNA methylation sequencing by combinatorial indexing and enzymatic DNA methylation conversion data." https://www.biorxiv.org/content/10.1101/2022.10.09.511389v1
 
 ## Instructions
 
@@ -16,7 +16,7 @@ _scimet_scripts_ is a collection of scripts used for the analysis of single-cell
 [trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) (0.36)
 
 ### Inputs
-code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/scimet_scripts
+code_location=/project/RDS-FMH-DementiaCFDNA-RW/local_lib/git_repo/sciem_scripts
 data_location=/project/RDS-FMH-DementiaCFDNA-RW/Epigenetics/scimet
 
 ## Pipeline
